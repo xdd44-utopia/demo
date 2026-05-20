@@ -3,14 +3,288 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Demo</title>
+    <title>Rhino MCP</title>
     <style>
-      html, body { margin: 0; height: 100%; overflow: hidden; background: #111; }
-      #app { width: 100vw; height: 100vh; }
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #2a2a2a;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        color: #ccc;
+      }
+      #layout {
+        display: flex;
+        height: 100vh;
+      }
+
+      /* ── Viewport ── */
+      #viewport {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+      }
+      #viewport canvas {
+        display: block;
+      }
+
+      /* ── Panel ── */
+      #panel {
+        width: 320px;
+        min-width: 280px;
+        display: flex;
+        flex-direction: column;
+        background: #1c1c1c;
+        border-left: 1px solid #3a3a3a;
+      }
+      #panel-header {
+        padding: 11px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        border-bottom: 1px solid #2e2e2e;
+        background: #222;
+        user-select: none;
+      }
+      #messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        scroll-behavior: smooth;
+      }
+      #messages::-webkit-scrollbar { width: 5px; }
+      #messages::-webkit-scrollbar-track { background: transparent; }
+      #messages::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
+      .placeholder-msg {
+        margin: auto;
+        text-align: center;
+        color: #484848;
+        font-size: 12px;
+        line-height: 1.7;
+        user-select: none;
+      }
+      .message {
+        padding: 9px 12px;
+        border-radius: 7px;
+        font-size: 13px;
+        line-height: 1.55;
+        max-width: 100%;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+      }
+      .message.user {
+        background: #1f3c5a;
+        color: #b8d4ec;
+        align-self: flex-end;
+        border-bottom-right-radius: 2px;
+      }
+      .message.assistant {
+        background: #262626;
+        color: #bbb;
+        border: 1px solid #333;
+        align-self: flex-start;
+        border-bottom-left-radius: 2px;
+      }
+
+      /* ── Input area ── */
+      #input-area {
+        padding: 10px 12px 12px;
+        border-top: 1px solid #2e2e2e;
+        background: #202020;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #message-input {
+        width: 100%;
+        background: #181818;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+        color: #ccc;
+        font-size: 13px;
+        font-family: inherit;
+        padding: 8px 10px;
+        resize: none;
+        outline: none;
+        line-height: 1.5;
+        min-height: 62px;
+        max-height: 130px;
+        transition: border-color 0.15s;
+      }
+      #message-input::placeholder { color: #484848; }
+      #message-input:focus { border-color: #4a7daa; }
+      #input-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .input-hint {
+        font-size: 11px;
+        color: #444;
+        user-select: none;
+      }
+      #send-btn {
+        padding: 6px 18px;
+        background: #1f4e78;
+        color: #a8cceb;
+        border: 1px solid #2d6098;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        transition: background 0.12s, border-color 0.12s;
+      }
+      #send-btn:hover { background: #265e90; border-color: #3a72b0; }
+      #send-btn:active { background: #1a4268; }
+      #send-btn:disabled { opacity: 0.4; cursor: default; }
+
+      #sync-btn {
+        padding: 6px 14px;
+        background: #1e2e1e;
+        color: #7cba7c;
+        border: 1px solid #3a5a3a;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        transition: background 0.12s, border-color 0.12s;
+      }
+      #sync-btn:hover { background: #263326; border-color: #4a7a4a; }
+      #sync-btn:active { background: #162016; }
+      #sync-btn:disabled { opacity: 0.4; cursor: default; }
+
+      /* ── Mesh quality slider ── */
+      #quality-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 2px 0 4px;
+      }
+      #quality-row .input-hint { flex-shrink: 0; }
+      #mesh-quality {
+        flex: 1;
+        -webkit-appearance: none;
+        height: 3px;
+        background: #3a3a3a;
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+      }
+      #mesh-quality::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #4a7a4a;
+        cursor: pointer;
+        transition: background 0.12s;
+      }
+      #mesh-quality::-webkit-slider-thumb:hover { background: #5a9a5a; }
+      #quality-label {
+        font-size: 11px;
+        color: #7cba7c;
+        min-width: 40px;
+        text-align: right;
+        user-select: none;
+      }
+
+      /* ── Debug panel ── */
+      #debug-panel {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 340px;
+        max-height: calc(100vh - 40px);
+        background: rgba(10, 10, 10, 0.88);
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        font-family: 'Consolas', 'Cascadia Code', monospace;
+        font-size: 11px;
+        z-index: 10;
+        backdrop-filter: blur(4px);
+      }
+      #debug-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 10px;
+        border-bottom: 1px solid #2e2e2e;
+        color: #666;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        user-select: none;
+        cursor: pointer;
+      }
+      #debug-header:hover { color: #999; }
+      #debug-toggle { color: #555; font-size: 10px; }
+      #debug-body {
+        overflow-y: auto;
+        padding: 8px 10px;
+        color: #9ecb9e;
+        white-space: pre-wrap;
+        word-break: break-all;
+        line-height: 1.5;
+        max-height: calc(100vh - 80px);
+      }
+      #debug-body::-webkit-scrollbar { width: 4px; }
+      #debug-body::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+      #debug-body.error { color: #e07070; }
     </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="layout">
+      <div id="viewport">
+        <div id="debug-panel">
+          <div id="debug-header">
+            <span>Debug — Rhino response</span>
+            <span id="debug-toggle">▼</span>
+          </div>
+          <pre id="debug-body">Waiting for first sync…</pre>
+        </div>
+      </div>
+
+      <div id="panel">
+        <div id="panel-header">AI Assistant</div>
+
+        <div id="messages">
+          <p class="placeholder-msg">
+            Describe what you'd like to create<br>or modify in the scene.
+          </p>
+        </div>
+
+        <div id="input-area">
+          <textarea
+            id="message-input"
+            placeholder="e.g. Add a red sphere at position 2, 0, 0…"
+          ></textarea>
+          <div id="quality-row">
+            <span class="input-hint">Mesh quality</span>
+            <input type="range" id="mesh-quality" min="1" max="5" value="3" step="1">
+            <span id="quality-label">Medium</span>
+          </div>
+          <div id="input-row">
+            <span class="input-hint">Shift+Enter for new line</span>
+            <div style="display:flex;gap:6px">
+              <button id="sync-btn" title="Pull current scene from Rhino">&#x21bb; Sync</button>
+              <button id="send-btn">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
