@@ -72,6 +72,13 @@ The TCP socket protocol (Rhino plugin side):
 
 ---
 
+
+## Interaction
+
+Rhino like mouse control for designers
+
+Select to edit function for more detailed control over verbally describe what to change
+
 ## Replacing Claude Desktop: Our Architecture
 
 ```

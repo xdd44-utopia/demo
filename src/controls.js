@@ -1,6 +1,8 @@
 import * as THREE from 'three';
+import { rhinoObjects, updateSelection } from './sync.js';
 
 // Right-drag → orbit | Shift+right-drag → pan | Scroll → zoom
+// Left-click → select | Shift+left-click → add | Ctrl+left-click → remove
 export class RhinoControls {
   constructor(cam, el) {
     this.cam = cam;
@@ -14,6 +16,17 @@ export class RhinoControls {
     this._lx = 0;
     this._ly = 0;
 
+    this._selectedIds = new Set();
+    this._raycaster = new THREE.Raycaster();
+    this._selStart = null;
+
+    this._zoomBtn = document.getElementById('zoom-selected');
+    if (this._zoomBtn) {
+      this._zoomBtn.addEventListener('click', () => this._zoomToSelected());
+    }
+
+    window.addEventListener('rhino-focus', e => this._zoomToObjects(e.detail.ids));
+
     el.addEventListener('contextmenu', e => e.preventDefault());
     el.addEventListener('pointerdown', this._down.bind(this));
     el.addEventListener('pointermove', this._move.bind(this));
@@ -23,6 +36,10 @@ export class RhinoControls {
   }
 
   _down(e) {
+    if (e.button === 0) {
+      this._selStart = { x: e.clientX, y: e.clientY };
+      return;
+    }
     if (e.button !== 2) return;
     e.preventDefault();
     this.el.setPointerCapture(e.pointerId);
@@ -57,9 +74,81 @@ export class RhinoControls {
   }
 
   _up(e) {
-    if (e.type !== 'pointercancel' && e.button !== 2) return;
-    this._state = null;
-    try { this.el.releasePointerCapture(e.pointerId); } catch (_) {}
+    if (e.type === 'pointercancel') {
+      this._state = null;
+      this._selStart = null;
+      try { this.el.releasePointerCapture(e.pointerId); } catch (_) {}
+      return;
+    }
+
+    if (e.button === 0 && this._selStart) {
+      const dx = e.clientX - this._selStart.x;
+      const dy = e.clientY - this._selStart.y;
+      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) this._doSelect(e);
+      this._selStart = null;
+      return;
+    }
+
+    if (e.button === 2) {
+      this._state = null;
+      try { this.el.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+  }
+
+  _doSelect(e) {
+    const rect = this.el.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this._raycaster.setFromCamera(new THREE.Vector2(x, y), this.cam);
+    const meshes = Array.from(rhinoObjects.values());
+    const intersects = this._raycaster.intersectObjects(meshes, false);
+
+    let hitId = null;
+    if (intersects.length > 0) {
+      const hitMesh = intersects[0].object;
+      for (const [id, mesh] of rhinoObjects) {
+        if (mesh === hitMesh) { hitId = id; break; }
+      }
+    }
+
+    if (e.shiftKey) {
+      if (hitId !== null) this._selectedIds.add(hitId);
+    } else if (e.ctrlKey) {
+      if (hitId !== null) this._selectedIds.delete(hitId);
+    } else {
+      this._selectedIds.clear();
+      if (hitId !== null) this._selectedIds.add(hitId);
+    }
+
+    updateSelection(this._selectedIds);
+    this._updateZoomBtn();
+  }
+
+  _updateZoomBtn() {
+    if (this._zoomBtn) {
+      this._zoomBtn.style.display = this._selectedIds.size > 0 ? 'block' : 'none';
+    }
+  }
+
+  _zoomToSelected() {
+    this._zoomToObjects([...this._selectedIds]);
+  }
+
+  _zoomToObjects(ids) {
+    const meshes = ids.map(id => rhinoObjects.get(id)).filter(Boolean);
+    if (meshes.length === 0) return;
+
+    const box = new THREE.Box3();
+    for (const mesh of meshes) box.expandByObject(mesh);
+
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z, 0.1);
+
+    this.target.copy(center);
+    this._sph.radius = maxDim * 2.5;
+    this._commit();
   }
 
   _wheel(e) {

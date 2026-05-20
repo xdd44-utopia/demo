@@ -11,7 +11,25 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(gh api *)",
       "Bash(npm install *)",
-      "Bash(npm uninstall *)"
+      "Bash(npm uninstall *)",
+      "WebSearch",
+      "Bash(gh repo *)",
+      "WebFetch(domain:playbooks.com)",
+      "WebFetch(domain:lobehub.com)",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:ubos.tech)",
+      "Bash(pip show *)",
+      "Bash(pip3 show *)",
+      "Bash(python -c \"import rhinomcp; print\\(rhinomcp.__file__\\)\")",
+      "Bash(python3 -c \"import rhinomcp; print\\(rhinomcp.__file__\\)\")",
+      "Bash(where python *)",
+      "Bash(where python3 *)",
+      "Bash(where uv *)",
+      "Bash(C:\\\\Python314\\\\python.exe -c \"import rhinomcp; print\\(rhinomcp.__file__\\)\")",
+      "Bash(C:\\\\Users\\\\xdd44\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python311\\\\python.exe -c \"import rhinomcp; print\\(rhinomcp.__file__\\)\")",
+      "Bash(C:\\\\ProgramData\\\\anaconda3\\\\python.exe -c \"import rhinomcp; print\\(rhinomcp.__file__\\)\")",
+      "Bash(powershell -Command \"Get-Content 'C:\\\\Users\\\\xdd44\\\\AppData\\\\Roaming\\\\Claude\\\\claude_desktop_config.json' -ErrorAction SilentlyContinue\")"
     ]
   }
 }

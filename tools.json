@@ -1,0 +1,1225 @@
+[
+  {
+    "name": "loft",
+    "description": "\n    Create a loft surface through multiple curves.\n\n    Parameters:\n    - curve_ids: List of curve IDs (GUIDs) to loft through (minimum 2 curves).\n                 Curves should be in order from start to end of the loft.\n    - name: Optional name for the resulting surface\n    - closed: If True, creates a closed loft (connects last curve back to first)\n    - loft_type: Type of loft (0=Normal, 1=Loose, 2=Tight, 3=Straight, 4=Developable)\n\n    Returns:\n    - Dictionary with result_ids (list of created surface IDs) and message\n\n    Example:\n        # Create two circles and loft between them\n        circle1 = create_object(type=\"CIRCLE\", params={\"center\": [0,0,0], \"radius\": 5})\n        circle2 = create_object(type=\"CIRCLE\", params={\"center\": [0,0,10], \"radius\": 3})\n        result = loft(curve_ids=[circle1_id, circle2_id], name=\"my_loft\")\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "curve_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Curve Ids",
+          "type": "array"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "closed": {
+          "default": false,
+          "title": "Closed",
+          "type": "boolean"
+        },
+        "loft_type": {
+          "default": 0,
+          "title": "Loft Type",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "curve_ids"
+      ],
+      "title": "loftArguments"
+    }
+  },
+  {
+    "name": "extrude_curve",
+    "description": "\n    Extrude a curve along a direction vector to create a surface or solid.\n\n    Parameters:\n    - curve_id: The curve ID (GUID) to extrude\n    - direction: Extrusion direction as [x, y, z] vector (e.g., [0, 0, 10] for 10 units up)\n    - name: Optional name for the resulting object\n    - cap: If True and curve is closed, caps the ends to create a solid (default: True)\n\n    Returns:\n    - Dictionary with result_id (created object ID) and message\n\n    Example:\n        # Create a circle and extrude it upward to make a cylinder\n        circle = create_object(type=\"CIRCLE\", params={\"center\": [0,0,0], \"radius\": 5})\n        result = extrude_curve(curve_id=circle_id, direction=[0, 0, 10], name=\"cylinder\")\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "curve_id": {
+          "title": "Curve Id",
+          "type": "string"
+        },
+        "direction": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Direction",
+          "type": "array"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "cap": {
+          "default": true,
+          "title": "Cap",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "curve_id",
+        "direction"
+      ],
+      "title": "extrude_curveArguments"
+    }
+  },
+  {
+    "name": "sweep1",
+    "description": "\n    Sweep one or more profile curves along a rail curve.\n\n    Parameters:\n    - rail_id: The rail curve ID (GUID) - the path along which to sweep\n    - profile_ids: List of profile curve IDs (GUIDs) - the shapes to sweep\n    - name: Optional name for the resulting surface\n    - closed: If True, creates a closed sweep\n\n    Returns:\n    - Dictionary with result_ids (list of created surface IDs) and message\n\n    Example:\n        # Create a rail (line) and profile (circle), then sweep\n        rail = create_object(type=\"LINE\", params={\"start\": [0,0,0], \"end\": [10,0,5]})\n        profile = create_object(type=\"CIRCLE\", params={\"center\": [0,0,0], \"radius\": 1})\n        result = sweep1(rail_id=rail_id, profile_ids=[profile_id], name=\"swept_tube\")\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "rail_id": {
+          "title": "Rail Id",
+          "type": "string"
+        },
+        "profile_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Profile Ids",
+          "type": "array"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "closed": {
+          "default": false,
+          "title": "Closed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "rail_id",
+        "profile_ids"
+      ],
+      "title": "sweep1Arguments"
+    }
+  },
+  {
+    "name": "offset_curve",
+    "description": "\n    Offset a curve by a specified distance.\n\n    Parameters:\n    - curve_id: The curve ID (GUID) to offset\n    - distance: Offset distance (positive = one side, negative = other side)\n    - name: Optional name for the resulting curve\n    - plane: Optional plane normal [x, y, z] for the offset direction.\n             If not provided, uses the curve's plane or world XY.\n    - corner_style: How to handle corners (0=None, 1=Sharp, 2=Round, 3=Smooth, 4=Chamfer)\n\n    Returns:\n    - Dictionary with result_ids (list of created curve IDs) and message\n\n    Example:\n        # Offset a curve by 2 units\n        result = offset_curve(curve_id=my_curve_id, distance=2.0, name=\"offset_curve\")\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "curve_id": {
+          "title": "Curve Id",
+          "type": "string"
+        },
+        "distance": {
+          "title": "Distance",
+          "type": "number"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "plane": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Plane"
+        },
+        "corner_style": {
+          "default": 1,
+          "title": "Corner Style",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "curve_id",
+        "distance"
+      ],
+      "title": "offset_curveArguments"
+    }
+  },
+  {
+    "name": "pipe",
+    "description": "\n    Create a pipe (tube) along a curve.\n\n    Parameters:\n    - curve_id: The curve ID (GUID) to create pipe along\n    - radius: Radius of the pipe\n    - name: Optional name for the resulting object\n    - cap: If True, caps the ends of the pipe (default: True)\n    - fit_rail: If True, fits the pipe more closely to the rail curve\n\n    Returns:\n    - Dictionary with result_ids (list of created object IDs) and message\n\n    Example:\n        # Create a curved line and make it into a pipe\n        curve = create_object(type=\"ARC\", params={\"center\": [0,0,0], \"radius\": 10, \"start_angle\": 0, \"end_angle\": 90})\n        result = pipe(curve_id=curve_id, radius=0.5, name=\"pipe_tube\")\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "curve_id": {
+          "title": "Curve Id",
+          "type": "string"
+        },
+        "radius": {
+          "title": "Radius",
+          "type": "number"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "cap": {
+          "default": true,
+          "title": "Cap",
+          "type": "boolean"
+        },
+        "fit_rail": {
+          "default": false,
+          "title": "Fit Rail",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "curve_id",
+        "radius"
+      ],
+      "title": "pipeArguments"
+    }
+  },
+  {
+    "name": "boolean_union",
+    "description": "\n    Perform a boolean union on multiple solid objects, combining them into one.\n\n    Parameters:\n    - object_ids: List of object IDs (GUIDs) to union together (minimum 2)\n    - delete_sources: Whether to delete the source objects after union (default: True)\n    - name: Optional name for the resulting object\n\n    Returns:\n    A message indicating the result of the operation.\n\n    Note: Objects must be valid closed solids (Breps, Extrusions, or Surfaces).\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "object_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Object Ids",
+          "type": "array"
+        },
+        "delete_sources": {
+          "default": true,
+          "title": "Delete Sources",
+          "type": "boolean"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "required": [
+        "object_ids"
+      ],
+      "title": "boolean_unionArguments"
+    }
+  },
+  {
+    "name": "boolean_difference",
+    "description": "\n    Perform a boolean difference (subtraction) - subtract objects from a base object.\n\n    Parameters:\n    - base_id: The object ID (GUID) of the base object to subtract from\n    - subtract_ids: List of object IDs (GUIDs) to subtract from the base\n    - delete_sources: Whether to delete the source objects after operation (default: True)\n    - name: Optional name for the resulting object\n\n    Returns:\n    A message indicating the result of the operation.\n\n    Note: Objects must be valid closed solids (Breps, Extrusions, or Surfaces).\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "base_id": {
+          "title": "Base Id",
+          "type": "string"
+        },
+        "subtract_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Subtract Ids",
+          "type": "array"
+        },
+        "delete_sources": {
+          "default": true,
+          "title": "Delete Sources",
+          "type": "boolean"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "required": [
+        "base_id",
+        "subtract_ids"
+      ],
+      "title": "boolean_differenceArguments"
+    }
+  },
+  {
+    "name": "boolean_intersection",
+    "description": "\n    Perform a boolean intersection - keep only the overlapping volume of objects.\n\n    Parameters:\n    - object_ids: List of object IDs (GUIDs) to intersect (minimum 2)\n    - delete_sources: Whether to delete the source objects after operation (default: True)\n    - name: Optional name for the resulting object\n\n    Returns:\n    A message indicating the result of the operation.\n\n    Note: Objects must be valid closed solids (Breps, Extrusions, or Surfaces) that overlap.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "object_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Object Ids",
+          "type": "array"
+        },
+        "delete_sources": {
+          "default": true,
+          "title": "Delete Sources",
+          "type": "boolean"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "required": [
+        "object_ids"
+      ],
+      "title": "boolean_intersectionArguments"
+    }
+  },
+  {
+    "name": "capture_viewport",
+    "description": "\n    Capture a screenshot of a Rhino viewport for visual analysis.\n\n    This tool captures the current state of a Rhino viewport as an image,\n    allowing Claude to visually understand and analyze the 3D model.\n\n    Parameters:\n    - viewport: Target viewport to capture. Options:\n        - \"active\": The currently active viewport (default)\n        - \"perspective\": The perspective viewport\n        - \"top\": Top orthographic view (plan view)\n        - \"front\": Front orthographic view\n        - \"right\": Right orthographic view\n        - \"back\": Back orthographic view\n        - \"left\": Left orthographic view\n        - \"bottom\": Bottom orthographic view\n        - Or any custom viewport name defined in the document\n    - width: Image width in pixels (default: 800, range: 100-4096)\n    - height: Image height in pixels (default: 600, range: 100-4096)\n    - show_grid: Show the viewport grid (default: True)\n    - show_axes: Show world axes indicator (default: True)\n    - show_cplane_axes: Show construction plane axes (default: False)\n    - zoom_to_fit: Zoom viewport to fit all objects before capture (default: False)\n\n    Returns:\n    An Image object that Claude can analyze visually.\n\n    Use Cases:\n    - Verify geometry creation matches user intent\n    - Analyze spatial relationships between objects\n    - Check visual appearance and layout\n    - Debug modeling issues by seeing the actual result\n    - Capture multiple views for comprehensive understanding\n\n    Example workflow:\n    1. capture_viewport(viewport=\"perspective\") - Get overall 3D view\n    2. capture_viewport(viewport=\"top\", zoom_to_fit=True) - Get plan view\n    3. capture_viewport(viewport=\"front\") - Get elevation view\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "viewport": {
+          "default": "active",
+          "title": "Viewport",
+          "type": "string"
+        },
+        "width": {
+          "default": 800,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "default": 600,
+          "title": "Height",
+          "type": "integer"
+        },
+        "show_grid": {
+          "default": true,
+          "title": "Show Grid",
+          "type": "boolean"
+        },
+        "show_axes": {
+          "default": true,
+          "title": "Show Axes",
+          "type": "boolean"
+        },
+        "show_cplane_axes": {
+          "default": false,
+          "title": "Show Cplane Axes",
+          "type": "boolean"
+        },
+        "zoom_to_fit": {
+          "default": false,
+          "title": "Zoom To Fit",
+          "type": "boolean"
+        }
+      },
+      "title": "capture_viewportArguments"
+    }
+  },
+  {
+    "name": "create_layer",
+    "description": "\n    Create a new layer in the Rhino document.\n    \n    Parameters:\n    - name: The name of the new layer. If omitted, Rhino automatically generates the layer name.\n    - color: Optional [r, g, b] color values (0-255) for the layer\n    - parent: Optional name of the new layer's parent layer. If omitted, the new layer will not have a parent layer.\n    \n    Returns:\n    A message indicating the created layer name.\n    \n    Examples of params:\n    - name: \"Layer 1\"\n    - color: [255, 0, 0]\n    - parent: \"Default\"\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "default": null,
+          "title": "Name",
+          "type": "string"
+        },
+        "color": {
+          "default": null,
+          "items": {
+            "type": "integer"
+          },
+          "title": "Color",
+          "type": "array"
+        },
+        "parent": {
+          "default": null,
+          "title": "Parent",
+          "type": "string"
+        }
+      },
+      "title": "create_layerArguments"
+    }
+  },
+  {
+    "name": "create_object",
+    "description": "\n    Create a new object in the Rhino document.\n    \n    Parameters:\n    - type: Object type (\"POINT\", \"LINE\", \"POLYLINE\", \"CIRCLE\", \"ARC\", \"ELLIPSE\", \"CURVE\", \"BOX\", \"SPHERE\", \"CONE\", \"CYLINDER\", \"SURFACE\"). For pipes, use the dedicated `pipe` tool.\n    - name: Optional name for the object\n    - color: Optional [r, g, b] color values (0-255) for the object\n    - params: Type-specific parameters dictionary (see documentation for each type)\n    - translation: Optional [x, y, z] translation vector\n    - rotation: Optional [x, y, z] rotation in radians\n    - scale: Optional [x, y, z] scale factors\n\n    The params dictionary is type-specific.\n    For POINT, the params dictionary should contain the following keys:\n    - x: x coordinate of the point\n    - y: y coordinate of the point\n    - z: z coordinate of the point\n\n    For LINE, the params dictionary should contain the following keys:\n    - start: [x, y, z] start point of the line\n    - end: [x, y, z] end point of the line\n\n    For POLYLINE, the params dictionary should contain the following keys:\n    - points: List of [x, y, z] points that define the polyline\n\n    For CIRCLE, the params dictionary should contain the following keys:\n    - center: [x, y, z] center point of the circle\n    - radius: Radius of the circle\n\n    For ARC, the params dictionary should contain the following keys:\n    - center: [x, y, z] center point of the arc\n    - radius: Radius of the arc\n    - angle: Angle of the arc in degrees\n\n    For ELLIPSE, the params dictionary should contain the following keys:\n    - center: [x, y, z] center point of the ellipse\n    - radius_x: Radius of the ellipse along X axis\n    - radius_y: Radius of the ellipse along Y axis\n\n    For CURVE, the params dictionary should contain the following keys:\n    - points: List of [x, y, z] control points that define the curve\n    - degree: Degree of the curve (default is 3, if user asked for smoother curve, degree can be higher)\n    If the curve is closed, the first and last points should be the same.\n\n    For BOX, the params dictionary should contain the following keys:\n    - width: Width of the box along X axis of the object\n    - length: Length of the box along Y axis of the object\n    - height: Height of the box along Z axis of the object\n\n    For SPHERE, the params dictionary should contain the following key:\n    - radius: Radius of the sphere\n\n    For CONE, the params dictionary should contain the following keys:\n    - radius: Radius of the cone\n    - height: Height of the cone\n    - cap: Boolean to indicate if the cone should be capped at the base, default is True\n\n    For CYLINDER, the params dictionary should contain the following keys:\n    - radius: Radius of the cylinder\n    - height: Height of the cylinder\n    - cap: Boolean to indicate if the cylinder should be capped at the base, default is True\n\n    For SURFACE, the params dictionary should contain the following keys:\n    - count : ([number, number]) Tuple of two numbers defining number of points in the u,v directions\n    - points: List of [x, y, z] points that define the surface\n    - degree: ([number, number], optional) Degree of the surface (default is 3, if user asked for smoother surface, degree can be higher)\n    - closed: ([bool, bool], optional) Two booleans defining if the surface is closed in the u,v directions\n    \n    Returns:\n    A dict with success, id, name, type, message — exceptions propagate as MCP tool errors.\n    \n    Examples of params:\n    - POINT: {\"x\": 0, \"y\": 0, \"z\": 0}\n    - LINE: {\"start\": [0, 0, 0], \"end\": [1, 1, 1]}\n    - POLYLINE: {\"points\": [[0, 0, 0], [1, 1, 1], [2, 2, 2]]}\n    - CIRCLE: {\"center\": [0, 0, 0], \"radius\": 1.0}\n    - CURVE: {\"points\": [[0, 0, 0], [1, 1, 1], [2, 2, 2]], \"degree\": 3}\n    - BOX: {\"width\": 1.0, \"length\": 1.0, \"height\": 1.0}\n    - SPHERE: {\"radius\": 1.0}\n    - CONE: {\"radius\": 1.0, \"height\": 1.0, \"cap\": True}\n    - CYLINDER: {\"radius\": 1.0, \"height\": 1.0, \"cap\": True}\n    - SURFACE: {\"count\": (3, 3), \"points\": [[0, 0, 0], [1, 0, 0], [2, 0, 0], [0, 1, 0], [1, 1, 0], [2, 1, 0], [0, 2, 0], [1, 2, 0], [2, 2, 0]], \"degree\": (3, 3), \"closed\": (False, False)}\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "BOX",
+          "title": "Type",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "params": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Params"
+        },
+        "translation": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Translation"
+        },
+        "rotation": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rotation"
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scale"
+        }
+      },
+      "title": "create_objectArguments"
+    }
+  },
+  {
+    "name": "create_objects",
+    "description": "\n    Create multiple objects at once in the Rhino document.\n    \n    Parameters:\n    - objects: A list of dictionaries, each containing the parameters for a single object\n\n    Each object should have the following values:\n    - type: Object type (\"POINT\", \"LINE\", \"POLYLINE\", \"BOX\", \"SPHERE\", etc.)\n    - name: Optional name for the object\n    - color: Optional [r, g, b] color values (0-255) for the object\n    - params: Type-specific parameters dictionary (see documentation for each type in create_object() function)\n    - translation: Optional [x, y, z] translation vector\n    - rotation: Optional [x, y, z] rotation in radians\n    - scale: Optional [x, y, z] scale factors\n\n    Returns:\n    A message indicating the created objects.\n    \n    Examples of params:\n    [\n        {\n            \"type\": \"POINT\",\n            \"name\": \"Point 1\",\n            \"params\": {\"x\": 0, \"y\": 0, \"z\": 0}\n        },\n        {\n            \"type\": \"LINE\",\n            \"name\": \"Line 1\",\n            \"params\": {\"start\": [0, 0, 0], \"end\": [1, 1, 1]}\n        },\n        {\n            \"type\": \"POLYLINE\",\n            \"name\": \"Polyline 1\",\n            \"params\": {\"points\": [[0, 0, 0], [1, 1, 1], [2, 2, 2]]}\n        },\n        {\n            \"type\": \"CURVE\",\n            \"name\": \"Curve 1\",\n            \"params\": {\"points\": [[0, 0, 0], [1, 1, 1], [2, 2, 2]], \"degree\": 3}\n        },\n        {\n            \"type\": \"BOX\",\n            \"name\": \"Box 1\",\n            \"color\": [255, 0, 0],\n            \"params\": {\"width\": 1.0, \"length\": 1.0, \"height\": 1.0},\n            \"translation\": [0, 0, 0],\n            \"rotation\": [0, 0, 0],\n            \"scale\": [1, 1, 1]\n        },\n        {\n            \"type\": \"SPHERE\",\n            \"name\": \"Sphere 1\",\n            \"color\": [0, 255, 0],\n            \"params\": {\"radius\": 1.0},\n            \"translation\": [0, 0, 0],\n            \"rotation\": [0, 0, 0],\n            \"scale\": [1, 1, 1]\n        }\n    ]\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "objects": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Objects",
+          "type": "array"
+        }
+      },
+      "required": [
+        "objects"
+      ],
+      "title": "create_objectsArguments"
+    }
+  },
+  {
+    "name": "project_curve",
+    "description": "\n    Project a curve onto surfaces, polysurfaces, or meshes.\n\n    Parameters:\n    - curve_id: The curve ID (GUID) to project\n    - target_ids: List of surface, polysurface, or mesh IDs to project onto\n    - direction: Projection direction as [x, y, z] vector\n    - name: Optional name for the resulting curves\n\n    Returns:\n    - Dictionary with result_ids (list of created curve IDs) and message\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "curve_id": {
+          "title": "Curve Id",
+          "type": "string"
+        },
+        "target_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Target Ids",
+          "type": "array"
+        },
+        "direction": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Direction",
+          "type": "array"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "required": [
+        "curve_id",
+        "target_ids",
+        "direction"
+      ],
+      "title": "project_curveArguments"
+    }
+  },
+  {
+    "name": "intersect_curves",
+    "description": "\n    Find intersection points or curves between two curves.\n\n    Parameters:\n    - curve_id_a: The first curve ID\n    - curve_id_b: The second curve ID\n    - tolerance: Optional intersection tolerance (defaults to document tolerance)\n    - name: Optional base name for created intersection objects\n\n    Returns:\n    - Dictionary with point_ids, curve_ids, and message\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "curve_id_a": {
+          "title": "Curve Id A",
+          "type": "string"
+        },
+        "curve_id_b": {
+          "title": "Curve Id B",
+          "type": "string"
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tolerance"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "required": [
+        "curve_id_a",
+        "curve_id_b"
+      ],
+      "title": "intersect_curvesArguments"
+    }
+  },
+  {
+    "name": "split_curve",
+    "description": "\n    Split a curve at specified parameters or points.\n\n    Parameters:\n    - curve_id: The curve ID to split\n    - parameters: Optional list of curve parameters to split at\n    - point_ids: Optional list of point object IDs to split at (closest points on curve will be used)\n    - delete_source: Whether to delete the original curve (default: True)\n    - name: Optional name for the resulting curve segments\n\n    Returns:\n    - Dictionary with result_ids (list of created curve segment IDs) and message\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "curve_id": {
+          "title": "Curve Id",
+          "type": "string"
+        },
+        "parameters": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parameters"
+        },
+        "point_ids": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Point Ids"
+        },
+        "delete_source": {
+          "default": true,
+          "title": "Delete Source",
+          "type": "boolean"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "required": [
+        "curve_id"
+      ],
+      "title": "split_curveArguments"
+    }
+  },
+  {
+    "name": "delete_layer",
+    "description": "\n    Delete a layer in the Rhino document.\n    If name is provided, it will try to delete the layer with the given name.\n    If guid is provided, it will try to delete the layer with the given guid.\n    If neither is provided, it will return an error.\n    \n    Parameters:\n    - name: The name of the layer to delete.\n    - guid: The guid of the layer to delete.\n    \n    Returns:\n    A message indicating the layer was deleted.\n    \n    Examples of params:\n    - name: \"Layer 1\"\n    - guid: \"00000000-0000-0000-0000-000000000000\"\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "guid": {
+          "default": null,
+          "title": "Guid",
+          "type": "string"
+        },
+        "name": {
+          "default": null,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "title": "delete_layerArguments"
+    }
+  },
+  {
+    "name": "delete_object",
+    "description": "\n    Delete an object from the Rhino document.\n\n    Parameters:\n    - id: The id of the object to delete\n    - name: The name of the object to delete\n    - all: If True, delete every object in the document.\n\n    Exactly one of id, name, or all=True must be provided. Errors propagate\n    as MCP tool errors.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "default": null,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "default": null,
+          "title": "Name",
+          "type": "string"
+        },
+        "all": {
+          "default": null,
+          "title": "All",
+          "type": "boolean"
+        }
+      },
+      "title": "delete_objectArguments"
+    }
+  },
+  {
+    "name": "execute_rhinocommon_csharp_code",
+    "description": "\n    Execute RhinoCommon C# code directly in Rhino.\n\n    This tool allows you to execute C# code that uses the RhinoCommon API directly.\n    The code is compiled and executed at runtime using Roslyn.\n\n    IMPORTANT NOTES:\n    ================\n    1. The code runs in a scripting context with the following globals available:\n       - `doc`: The active RhinoDoc (Rhino.RhinoDoc)\n       - `output`: A StringBuilder to capture output (use output.AppendLine(\"...\"))\n\n    2. Common namespaces are pre-imported:\n       - System, System.Collections.Generic, System.Linq\n       - Rhino, Rhino.Geometry, Rhino.DocObjects, Rhino.Commands\n\n    3. Use `output.AppendLine()` to return results to the caller (like print() in Python)\n\n    Parameters:\n    - code: The C# code to execute\n\n    Example Usage:\n    --------------\n    Task: \"Create a sphere at the origin\"\n\n    ```csharp\n    var sphere = new Sphere(Point3d.Origin, 5.0);\n    var brep = sphere.ToBrep();\n    doc.Objects.AddBrep(brep);\n    doc.Views.Redraw();\n    output.AppendLine($\"Created sphere with radius 5 at origin\");\n    ```\n\n    Task: \"List all curves in the document\"\n\n    ```csharp\n    var curves = doc.Objects.FindByObjectType(ObjectType.Curve);\n    output.AppendLine($\"Found {curves.Length} curves:\");\n    foreach (var obj in curves)\n    {\n        output.AppendLine($\"  - {obj.Id}: {obj.Name ?? \"(unnamed)\"}\");\n    }\n    ```\n\n    Task: \"Create a line between two points\"\n\n    ```csharp\n    var start = new Point3d(0, 0, 0);\n    var end = new Point3d(10, 10, 0);\n    var line = new Line(start, end);\n    doc.Objects.AddLine(line);\n    doc.Views.Redraw();\n    output.AppendLine($\"Created line from {start} to {end}\");\n    ```\n\n    Common Mistakes to Avoid:\n    - Forgetting to use `output.AppendLine()` to return results\n    - Not calling `doc.Views.Redraw()` after adding objects\n    - Using types without their namespace (use Point3d, not Rhino.Geometry.Point3d)\n\n    Returns:\n    - success: Whether the code executed successfully\n    - output: Any output from output.AppendLine() calls\n    - message: Error message if failed (includes compilation errors)\n\n    Any changes made to the document will be undone if the script fails.\n\n    Safety: this tool compiles+runs arbitrary C# inside Rhino. Gated by the\n    RHINO_MCP_ENABLE_CSHARP env var (default on for local dev). Set to \"0\"\n    to refuse calls — recommended when the MCP server is exposed to\n    untrusted clients.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "execute_rhinocommon_csharp_codeArguments"
+    }
+  },
+  {
+    "name": "execute_rhinoscript_python_code",
+    "description": "\n    Execute RhinoScript Python code in Rhino.\n\n    CRITICAL - BEFORE USING THIS TOOL:\n    =================================\n    You MUST call get_rhinoscript_docs() or search_rhinoscript_functions() first\n    to find the correct function signatures. DO NOT guess function names or parameters.\n\n    Required Workflow:\n    1. Call get_rhinoscript_docs(\"your goal\") to find relevant functions\n    2. Read the documentation carefully - note exact signatures and parameter types\n    3. Write code using ONLY the documented signatures\n    4. Call this tool with the code\n\n    Parameters:\n    - code: The RhinoScript Python code to execute\n\n    Code Requirements:\n    - Import rhinoscriptsyntax: `import rhinoscriptsyntax as rs`\n    - Use print() to return output/results to the caller\n    - Use EXACT function signatures from documentation\n    - Handle None returns from functions that might fail\n\n    Example Workflow:\n    -----------------\n    Task: \"Create a loft surface between two curves\"\n\n    Step 1: get_rhinoscript_docs(\"loft surface curves\")\n            -> Returns AddLoftSrf documentation with exact signature\n\n    Step 2: Read that AddLoftSrf takes object_ids (list of curve GUIDs)\n\n    Step 3: Write and execute:\n    ```python\n    import rhinoscriptsyntax as rs\n\n    # Get the curves (assumes they exist)\n    curves = rs.GetObjects(\"Select curves for loft\", rs.filter.curve)\n    if curves:\n        loft = rs.AddLoftSrf(curves)\n        print(f\"Created loft: {loft}\")\n    ```\n\n    Common Mistakes to Avoid:\n    - Using non-existent functions (ALWAYS verify with docs first)\n    - Wrong parameter order (check signature carefully)\n    - Wrong parameter types (e.g., passing Point3d when list expected)\n    - Forgetting to import rhinoscriptsyntax\n\n    Returns:\n    - success: Whether the code executed successfully\n    - output: Any print() output from the script\n    - message: Error message if failed\n\n    Any changes made to the document will be undone if the script fails.\n\n    Safety: this tool runs arbitrary Python inside Rhino. Gated by the\n    RHINO_MCP_ENABLE_RHINOSCRIPT env var (default on for local dev). Set to\n    \"0\" to refuse calls — recommended when the MCP server is exposed to\n    untrusted clients.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "execute_rhinoscript_python_codeArguments"
+    }
+  },
+  {
+    "name": "get_commands",
+    "description": "\n    List Rhino command names available in the current session.\n\n    Use this together with `run_command` to discover what is invokable before guessing\n    a command name. Filter is a case-insensitive substring match — pass \"boolean\" to\n    find every boolean-related command, \"view\" for view commands, and so on.\n\n    Parameters:\n    - filter: Optional case-insensitive substring. Empty string returns all commands.\n    - loaded_only: If True (default), only commands from currently loaded plugins are\n                   returned. Set False to also include commands from unloaded plugins.\n\n    Returns a JSON object: {\"count\": N, \"commands\": [\"Box\", \"Circle\", ...]}\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "filter": {
+          "default": "",
+          "title": "Filter",
+          "type": "string"
+        },
+        "loaded_only": {
+          "default": true,
+          "title": "Loaded Only",
+          "type": "boolean"
+        }
+      },
+      "title": "get_commandsArguments"
+    }
+  },
+  {
+    "name": "get_document_summary",
+    "description": "\n    Get a lightweight summary of the current Rhino document.\n\n    This returns aggregated statistics about the model without individual object details:\n    - Document metadata (name, units, tolerance, dates)\n    - Total object count\n    - Object counts grouped by type (e.g., 50 curves, 30 surfaces)\n    - Object counts grouped by layer\n    - Model-wide bounding box encompassing all objects\n    - Full layer hierarchy with parent-child relationships and per-layer object counts\n\n    Use this tool first to understand the model composition before querying specific objects.\n    For detailed object information, use get_objects with filters.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {},
+      "title": "get_document_summaryArguments"
+    }
+  },
+  {
+    "name": "get_object_info",
+    "description": "\n    Get detailed information about a specific object in the Rhino document.\n    The information contains the object's id, name, type, all custom user attributes and geometry info.\n    You can either provide the id or the object_name of the object to get information about.\n    If both are provided, the id will be used.\n\n    Returns:\n    - A dictionary containing the object's information\n    - The dictionary will have the following keys:\n        - \"id\": The id of the object\n        - \"name\": The name of the object\n        - \"type\": The type of the object\n        - \"layer\": The layer of the object\n        - \"material\": The material of the object\n        - \"color\": The color of the object\n        - \"bounding_box\": The bounding box of the object\n        - \"geometry\": The geometry info of the object\n        - \"attributes\": A dictionary containing all custom user attributes of the object\n    \n    Parameters:\n    - id: The id of the object to get information about\n    - name: The name of the object to get information about\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "default": null,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "default": null,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "title": "get_object_infoArguments"
+    }
+  },
+  {
+    "name": "get_objects",
+    "description": "\n    Query objects in the Rhino document with filtering and pagination.\n\n    Use this tool to retrieve specific subsets of objects after first calling\n    get_document_summary to understand the model composition.\n\n    Parameters:\n    - offset: Number of objects to skip (default: 0)\n    - limit: Maximum objects to return (default: 50, max: 200)\n    - layer_filter: Return only objects on this layer (name or full path)\n    - type_filter: Return only objects of this type:\n        POINT, LINE, POLYLINE, CIRCLE, ARC, CURVE,\n        BOX, SPHERE, CONE, CYLINDER, SURFACE, BREP, EXTRUSION, MESH\n    - bbox_filter: Return objects within bounding box [[min_x,min_y,min_z],[max_x,max_y,max_z]]\n    - include_geometry: Include detailed geometry data (default: true, false for lightweight listing)\n\n    Returns:\n    - objects: Array of object information\n    - total_matching: Total count matching filters\n    - offset, limit: Applied pagination\n    - has_more: Whether more objects are available\n    - filters: The filters that were applied\n\n    Example: Get all curves on layer \"Walls\":\n        get_objects(layer_filter=\"Walls\", type_filter=\"CURVE\")\n\n    Example: Get next page of results:\n        get_objects(offset=50, limit=50)\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "default": 0,
+          "title": "Offset",
+          "type": "integer"
+        },
+        "limit": {
+          "default": 50,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "layer_filter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Layer Filter"
+        },
+        "type_filter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Type Filter"
+        },
+        "bbox_filter": {
+          "anyOf": [
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bbox Filter"
+        },
+        "include_geometry": {
+          "default": true,
+          "title": "Include Geometry",
+          "type": "boolean"
+        }
+      },
+      "title": "get_objectsArguments"
+    }
+  },
+  {
+    "name": "get_or_set_current_layer",
+    "description": "\n    Get or set the current layer in the Rhino document.\n    If name is provided, it will try to set the current layer to the layer with the given name.\n    If guid is provided, it will try to set the current layer to the layer with the given guid.\n    If neither is provided, it will return the current layer.\n    \n    Parameters:\n    - name: The name of the layer to set the current layer to.\n    - guid: The guid of the layer to set the current layer to.\n    \n    Returns:\n    A message indicating the current layer.\n    \n    Examples of params:\n    - name: \"Layer 1\"\n    - guid: \"00000000-0000-0000-0000-000000000000\"\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "guid": {
+          "default": null,
+          "title": "Guid",
+          "type": "string"
+        },
+        "name": {
+          "default": null,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "title": "get_or_set_current_layerArguments"
+    }
+  },
+  {
+    "name": "get_selected_objects_info",
+    "description": "Get detailed information about the currently selected objects in Rhino\n    \n    Parameters:\n    - include_attributes: Whether to include the custom user attributes of the objects in the response\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "include_attributes": {
+          "default": false,
+          "title": "Include Attributes",
+          "type": "boolean"
+        }
+      },
+      "title": "get_selected_objects_infoArguments"
+    }
+  },
+  {
+    "name": "modify_object",
+    "description": "\n    Modify an existing object in the Rhino document.\n\n    Parameters:\n    - id: The id of the object to modify\n    - name: The name of the object to modify\n    - new_name: Optional new name for the object\n    - new_color: Optional [r, g, b] color values (0-255) for the object\n    - translation: Optional [x, y, z] translation vector\n    - rotation: Optional [x, y, z] rotation in radians\n    - scale: Optional [x, y, z] scale factors\n    - visible: Optional boolean to set visibility\n\n    Returns a dict with success/id/name/message. Errors propagate as MCP tool errors.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Id"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "new_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "New Name"
+        },
+        "new_color": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "New Color"
+        },
+        "translation": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Translation"
+        },
+        "rotation": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rotation"
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scale"
+        },
+        "visible": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Visible"
+        }
+      },
+      "title": "modify_objectArguments"
+    }
+  },
+  {
+    "name": "modify_objects",
+    "description": "\n    Create multiple objects at once in the Rhino document.\n    \n    Parameters:\n    - objects: A List of objects, each containing the parameters for a single object modification \n    - all: Optional boolean to modify all objects, if true, only one object is required in the objects dictionary\n\n    Each object can have the following parameters:\n    - id: The id of the object to modify\n    - new_color: Optional [r, g, b] color values (0-255) for the object\n    - translation: Optional [x, y, z] translation vector\n    - rotation: Optional [x, y, z] rotation in radians\n    - scale: Optional [x, y, z] scale factors\n    - visible: Optional boolean to set visibility\n\n    Returns:\n    A message indicating the modified objects.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "objects": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Objects",
+          "type": "array"
+        },
+        "all": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "All"
+        }
+      },
+      "required": [
+        "objects"
+      ],
+      "title": "modify_objectsArguments"
+    }
+  },
+  {
+    "name": "search_rhinoscript_functions",
+    "description": "\n    Search RhinoScript functions by keyword or description.\n\n    Use this tool to find the correct function names before writing any RhinoScript code.\n\n    Parameters:\n    - query: What you want to do (e.g., \"loft\", \"create surface from curves\", \"boolean union\", \"extrude\")\n    - limit: Maximum number of results to return (default: 10)\n\n    Returns:\n    - List of matching functions with name, signature, description, and module\n\n    Example queries:\n    - \"loft surface\" -> finds AddLoftSrf, etc.\n    - \"boolean\" -> finds BooleanDifference, BooleanUnion, BooleanIntersection\n    - \"create curve\" -> finds AddCurve, AddLine, AddArc, etc.\n    - \"rotate\" -> finds RotateObject, RotateObjects, etc.\n\n    IMPORTANT: Always use this tool BEFORE writing RhinoScript code to find correct function names.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "title": "Query",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "title": "Limit",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "title": "search_rhinoscript_functionsArguments"
+    }
+  },
+  {
+    "name": "get_rhinoscript_docs",
+    "description": "\n    Get comprehensive RhinoScript documentation for a topic.\n\n    This is the PRIMARY tool to use before writing any RhinoScript Python code.\n    It searches for relevant functions and returns complete documentation including\n    signatures, parameters, return values, and examples.\n\n    Parameters:\n    - topic: What you want to accomplish (e.g., \"loft surface between curves\", \"boolean operations\", \"extrude curve\")\n    - include_examples: Whether to include code examples (default: True)\n    - max_functions: Maximum number of function docs to return (default: 5)\n\n    Returns:\n    - Comprehensive documentation for the most relevant functions\n\n    CRITICAL: You MUST call this tool before using execute_rhinoscript_python_code.\n    Using functions without checking their documentation leads to syntax errors.\n\n    Example usage:\n    1. User asks: \"Create a loft surface between two curves\"\n    2. Call: get_rhinoscript_docs(\"loft surface curves\")\n    3. Read the returned documentation carefully\n    4. Write code using ONLY the exact signatures shown\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "title": "Topic",
+          "type": "string"
+        },
+        "include_examples": {
+          "default": true,
+          "title": "Include Examples",
+          "type": "boolean"
+        },
+        "max_functions": {
+          "default": 5,
+          "title": "Max Functions",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "topic"
+      ],
+      "title": "get_rhinoscript_docsArguments"
+    }
+  },
+  {
+    "name": "list_rhinoscript_modules",
+    "description": "\n    List all available RhinoScript modules and their function counts.\n\n    Use this to explore what's available in RhinoScript when you're not sure\n    what module contains the functions you need.\n\n    Returns:\n    - List of all modules with function counts and descriptions\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {},
+      "title": "list_rhinoscript_modulesArguments"
+    }
+  },
+  {
+    "name": "get_module_functions",
+    "description": "\n    Get all functions in a specific RhinoScript module with their signatures.\n\n    Parameters:\n    - module_name: The module name (e.g., \"curve\", \"surface\", \"mesh\", \"transformation\")\n\n    Use list_rhinoscript_modules() first to see available modules.\n\n    Returns:\n    - All functions in the module with signatures and brief descriptions\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "module_name": {
+          "title": "Module Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "module_name"
+      ],
+      "title": "get_module_functionsArguments"
+    }
+  },
+  {
+    "name": "run_command",
+    "description": "\n    Execute a Rhino command string and return whatever the command window prints.\n\n    This is the escape hatch for Rhino commands that do not yet have a typed MCP tool.\n    Anything you can type into the Rhino command line works here, including aliases and\n    macros. Prefix the command name with an underscore to force the English name (e.g.\n    \"_Box 0,0,0 10,10,10\"). Multiple commands can be chained with newlines.\n\n    Pair this with `get_commands` to discover what command names are available before\n    invoking. Prefer the typed tools (create_object, boolean_union, etc.) when one\n    exists — they are validated and return structured data.\n\n    Parameters:\n    - command: Rhino command string to execute, e.g. \"_Box 0,0,0 10,10,10\".\n    - echo: If True, the command is echoed in the Rhino command window as it runs.\n            Default False to keep the output focused on diagnostics.\n\n    Returns the captured command-window output as a string. Failed commands are\n    prefixed with \"Command failed:\" so the agent can distinguish failure from\n    silent success without parsing JSON.\n\n    Safety: this tool is gated by the RHINO_MCP_ENABLE_RUN_COMMAND env var\n    (default on for local dev). Set it to \"0\" to refuse calls before they\n    reach Rhino — recommended whenever the MCP server is exposed to\n    untrusted clients.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "title": "Command",
+          "type": "string"
+        },
+        "echo": {
+          "default": false,
+          "title": "Echo",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "title": "run_commandArguments"
+    }
+  },
+  {
+    "name": "select_objects",
+    "description": "\n    Select objects in the Rhino document.\n    \n    Parameters:\n    - filters: A dictionary containing the filters. The filters parameter is necessary, unless it's empty, in which case all objects will be selected.\n    - filters_type: The type of the filters, it's \"and\" or \"or\", default is \"and\"\n\n    Note:\n    Name and custom attribute filter values are lists of strings (even if there's only one value).\n    `color` is a single RGB triplet (not a list of triplets).\n\n    Filter semantics:\n    - With filters_type=\"and\", an object matches when every filter key matches at least one\n      of that key's listed values.\n    - With filters_type=\"or\", an object matches when any filter key matches any listed value.\n    - Name and custom-attribute string matches are exact (case-sensitive).\n\n    Keys:\n    - name: list of object names, e.g. [\"Box1\", \"Box2\"]\n    - color: single RGB triplet, e.g. [255, 0, 0]\n    - any other key is treated as a user custom attribute and the value is a list of strings.\n\n    Example:\n    filters = {\n        \"name\": [\"object_name1\", \"object_name2\"],\n        \"category\": [\"custom_attribute_value\"]\n    },\n    filters_type = \"or\"\n    \n\n    Returns:\n    A number indicating the number of objects that have been selected.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "filters": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "items": {},
+                "type": "array"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Filters"
+        },
+        "filters_type": {
+          "default": "and",
+          "title": "Filters Type",
+          "type": "string"
+        }
+      },
+      "title": "select_objectsArguments"
+    }
+  },
+  {
+    "name": "undo",
+    "description": "\n    Undo the last operation(s) in the Rhino document.\n\n    Parameters:\n    - steps: Number of operations to undo (default: 1)\n\n    Returns:\n    A message indicating how many operations were undone.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "default": 1,
+          "title": "Steps",
+          "type": "integer"
+        }
+      },
+      "title": "undoArguments"
+    }
+  },
+  {
+    "name": "redo",
+    "description": "\n    Redo the last undone operation(s) in the Rhino document.\n\n    Parameters:\n    - steps: Number of operations to redo (default: 1)\n\n    Returns:\n    A message indicating how many operations were redone.\n    ",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "default": 1,
+          "title": "Steps",
+          "type": "integer"
+        }
+      },
+      "title": "redoArguments"
+    }
+  }
+]

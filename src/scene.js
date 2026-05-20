@@ -4,7 +4,6 @@ const viewport = document.getElementById('viewport');
 
 export const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x3c3c3c);
-scene.fog = new THREE.FogExp2(0x3c3c3c, 0.018);
 
 export const camera = new THREE.PerspectiveCamera(
   45,

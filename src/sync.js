@@ -5,14 +5,18 @@ function rhinoToThree(rx, ry, rz) {
   return [rx, rz, -ry];
 }
 
-const rhinoObjects = new Map(); // rhinoId → THREE.Mesh
+export const rhinoObjects = new Map(); // rhinoId → THREE.Mesh
 let rhinoGroup = null;
 
 // ── Debug panel ────────────────────────────────────────────────────────────
+const debugPanel  = document.getElementById('debug-panel');
 const debugBody   = document.getElementById('debug-body');
 const debugHeader = document.getElementById('debug-header');
 const debugToggle = document.getElementById('debug-toggle');
 let debugCollapsed = false;
+let debugVisible   = false;
+
+debugPanel.style.display = 'none';
 
 debugHeader.addEventListener('click', () => {
   debugCollapsed = !debugCollapsed;
@@ -20,10 +24,19 @@ debugHeader.addEventListener('click', () => {
   debugToggle.textContent  = debugCollapsed ? '▶' : '▼';
 });
 
+document.addEventListener('keydown', e => {
+  if ((e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    e.preventDefault();
+    debugVisible = !debugVisible;
+    debugPanel.style.display = debugVisible ? '' : 'none';
+  }
+});
+
 function debugShow(text, isError = false) {
   debugBody.className = isError ? 'error' : '';
   debugBody.textContent = text;
-  // Auto-expand on new data
   if (debugCollapsed) {
     debugCollapsed = false;
     debugBody.style.display = '';
@@ -31,10 +44,33 @@ function debugShow(text, isError = false) {
   }
 }
 
+// ── Selection ──────────────────────────────────────────────────────────────
+let _selectedIds = new Set();
+
+export function getSelectedIds() {
+  return [..._selectedIds];
+}
+
+export function updateSelection(selectedIds) {
+  _selectedIds = selectedIds;
+  for (const [id, mesh] of rhinoObjects) {
+    const edges = mesh.children.find(c => c.isLineSegments);
+    if (edges) edges.visible = _selectedIds.has(id);
+  }
+  window.dispatchEvent(new CustomEvent('rhino-selection', { detail: { count: _selectedIds.size } }));
+}
+
 // ── Sync ───────────────────────────────────────────────────────────────────
 const QUALITY_LABELS = ['', 'Coarse', 'Low', 'Medium', 'High', 'Ultra'];
 
+let _appendMessage = null;
+
+export async function triggerSync(autoFocus = false) {
+  if (_appendMessage) await syncScene(_appendMessage, autoFocus);
+}
+
 export function initSync(scene, appendMessage) {
+  _appendMessage = appendMessage;
   rhinoGroup = new THREE.Group();
   scene.add(rhinoGroup);
 
@@ -47,7 +83,7 @@ export function initSync(scene, appendMessage) {
   );
 }
 
-async function syncScene(appendMessage) {
+async function syncScene(appendMessage, autoFocus = false) {
   const btn = document.getElementById('sync-btn');
   btn.disabled = true;
   btn.textContent = 'Syncing…';
@@ -59,7 +95,6 @@ async function syncScene(appendMessage) {
     const res = await fetch(`/api/sync?q=${quality}`);
     rawText = await res.text();
 
-    // Show the raw response immediately so it's visible regardless of what follows
     debugShow(rawText);
 
     if (!res.ok) {
@@ -69,11 +104,8 @@ async function syncScene(appendMessage) {
     }
 
     const data = JSON.parse(rawText);
-
-    // Pretty-print back into the panel for readability
     debugShow(JSON.stringify(data, null, 2));
-
-    updateScene(data);
+    updateScene(data, autoFocus);
     appendMessage(`Synced ${data.length} object(s) from Rhino.`, 'assistant');
     btn.textContent = '✓ Synced';
     setTimeout(() => { btn.textContent = 'Sync'; btn.disabled = false; }, 1500);
@@ -86,7 +118,7 @@ async function syncScene(appendMessage) {
 }
 
 // ── Scene update ───────────────────────────────────────────────────────────
-function updateScene(objects) {
+function updateScene(objects, autoFocus = false) {
   const newIds = new Set(objects.map(o => o.id));
 
   for (const [id, mesh] of rhinoObjects) {
@@ -107,6 +139,15 @@ function updateScene(objects) {
     rhinoGroup.add(mesh);
     rhinoObjects.set(obj.id, mesh);
   }
+
+  // Reapply wireframe state after rebuild
+  updateSelection(_selectedIds);
+
+  if (autoFocus && objects.length > 0) {
+    window.dispatchEvent(new CustomEvent('rhino-focus', {
+      detail: { ids: objects.map(o => o.id) }
+    }));
+  }
 }
 
 function buildMesh({ vertices, faces, color }) {
@@ -121,7 +162,6 @@ function buildMesh({ vertices, faces, color }) {
   }
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-  // Expand quads → two triangles
   const indices = [];
   for (const f of faces) {
     if (f.length === 3) {
@@ -141,13 +181,13 @@ function buildMesh({ vertices, faces, color }) {
   mesh.castShadow = true;
   mesh.receiveShadow = true;
 
-  // Show only hard edges (≥25°) to avoid noise on tessellated NURBS
-  mesh.add(
-    new THREE.LineSegments(
-      new THREE.EdgesGeometry(geo, 25),
-      new THREE.LineBasicMaterial({ color: 0xaaaaaa })
-    )
+  // Edges shown only when selected (yellow highlight)
+  const edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(geo, 25),
+    new THREE.LineBasicMaterial({ color: 0xffcc00 })
   );
+  edges.visible = false;
+  mesh.add(edges);
 
   return mesh;
 }
